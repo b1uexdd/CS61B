@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author Yizhi Li
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -106,14 +106,53 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+    /**handle a specific i column, input: ith column output:
+    * */
+    private boolean moveOneColumn(int i){
+        boolean columnChanged = false;
+        boolean[] arr = new boolean[board.size()];
+        for(int j=3; j>-1; j=j-1) {
+            if (board.tile(i, j) != null) {
+                int targetRow = j + 1;
+                while (targetRow < board.size() && board.tile(i, targetRow) == null) {
+                    targetRow += 1;
+                }
+                if (targetRow < board.size() && board.tile(i, targetRow).value() == board.tile(i, j).value()) {
+                    ;
+                } else {
+                    targetRow -= 1;
+                }
+                if (arr[targetRow] != true) {
+                    boolean merged = board.move(i, targetRow, board.tile(i, j));
+                    if (merged) {
+                        score += board.tile(i, targetRow).value();
+                        arr[targetRow] = true;
+                    }
+                }
+                else{
+                    board.move(i, targetRow-1, board.tile(i, j));
+                }
+                if (targetRow != j) {
+                    columnChanged = true;
+                }
+            }
+        }
+        return columnChanged;
+        }
+
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
-
+        board.setViewingPerspective(side);
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
 
+        for(int i=0; i < board.size(); i=i+1) {
+            boolean columnChanged = moveOneColumn(i);
+            changed = changed || columnChanged;
+            }
+        board.setViewingPerspective(Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
@@ -138,6 +177,13 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for(int i=0; i < b.size(); i=i+1) {
+            for (int j=0; j < b.size(); j = j + 1) {
+                if (b.tile(i, j) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +194,13 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for(int i=0; i < b.size(); i=i+1) {
+            for (int j = 0; j < b.size(); j = j + 1) {
+                if(b.tile(i,j) != null && b.tile(i, j).value() == MAX_PIECE){
+                        return true;
+                    }
+                }
+            }
         return false;
     }
 
@@ -159,6 +212,24 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        for(int i=0; i < b.size(); i=i+1) {
+            for (int j = 0; j < b.size(); j = j + 1) {
+                if (b.tile(i,j) == null){
+                    return true;
+                }
+                // 2. 和右邻居相同
+                if (j + 1 < b.size() && b.tile(i, j + 1) != null
+                        && b.tile(i,j).value() == b.tile(i, j + 1).value()) {
+                    return true;
+                }
+
+                // 3. 和下邻居相同
+                if (i + 1 < b.size() && b.tile(i + 1, j) != null
+                        && b.tile(i,j).value() == b.tile(i + 1, j).value()) {
+                    return true;
+                }
+                }
+            }
         return false;
     }
 
